@@ -58,7 +58,7 @@ async function processRow(row) {
   let processingComplete = false;
   let processedData = null;
   while (!processingComplete) {
-    const response = await sails.helpers.getData.with({ id: row.id });
+    const response = await sails.helpers.getData.with({ id: JSON.stringify(row) });
     if (response.status === 'complete') {
       processingComplete = true;
       processedData = response.data;

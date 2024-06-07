@@ -7,6 +7,7 @@ const { fn } = require("../helpers/utils");
 const {
   ProcessingRequestStatus,
 } = require("../models/processingRequestStatus");
+const imageData = require("../models/imageData");
 
 module.exports = {
   uploadAndProcessCsv: async function (req, res) {
@@ -55,16 +56,6 @@ module.exports = {
             try {
               for (const row of rows) {
                 const processedRow = await processRow(row);
-                await ProcessingRequestStatus.updateOne(
-                  {
-                    request_id: fileId,
-                  },
-                  {
-                    $set: {
-                      status: "completed",
-                    },
-                  }
-                );
                 processedRows.push(processedRow);
               }
 
@@ -75,10 +66,18 @@ module.exports = {
               );
               await writeProcessedDataToCsv(processedRows, processedCsvPath);
 
-              return res.ok({
-                message: "CSV processed successfully",
-                processedFilePath: processedCsvPath,
-              });
+              await imageData.insertMany(processedRows);
+              await ProcessingRequestStatus.updateOne(
+                {
+                  request_id: fileId,
+                  filePath: processedCsvPath,
+                },
+                {
+                  $set: {
+                    status: "completed",
+                  },
+                }
+              );
             } catch (error) {
               await ProcessingRequestStatus.updateOne(
                 {
@@ -113,6 +112,7 @@ module.exports = {
     console.log(result);
     return res.ok({
       message: `File status for request id ${requestId} is ${result.status}`,
+      filePath: result.status === "completed" ? result.file_path : null,
     });
   },
 };

@@ -9,4 +9,4 @@ const ImageDataSchema = new mongoose.Schema({
 
 const ImageDataModel = db.model("ImageData", ImageDataSchema);
 
-module.exports = new ImageDataModel();
+module.exports = new ImageDataModel().collection;
